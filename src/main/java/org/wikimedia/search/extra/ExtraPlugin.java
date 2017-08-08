@@ -1,7 +1,10 @@
 package org.wikimedia.search.extra;
 
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.IndexModule;
 import org.elasticsearch.index.analysis.TokenFilterFactory;
 import org.elasticsearch.indices.analysis.AnalysisModule.AnalysisProvider;
+import org.elasticsearch.monitor.os.OsService;
 import org.elasticsearch.plugins.AnalysisPlugin;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.ScriptPlugin;
@@ -17,7 +20,8 @@ import org.wikimedia.search.extra.superdetectnoop.SuperDetectNoopScript;
 import org.wikimedia.search.extra.superdetectnoop.VersionedDocumentHandler;
 import org.wikimedia.search.extra.superdetectnoop.WithinAbsoluteHandler;
 import org.wikimedia.search.extra.superdetectnoop.WithinPercentageHandler;
-import org.wikimedia.search.extra.tokencount.TokenCountRouterQueryBuilder;
+import org.wikimedia.search.extra.router.DegradedRouterQueryBuilder;
+import org.wikimedia.search.extra.router.TokenCountRouterQueryBuilder;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,6 +35,14 @@ import java.util.Set;
  * Setup the Elasticsearch plugin.
  */
 public class ExtraPlugin extends Plugin implements SearchPlugin, AnalysisPlugin, ScriptPlugin {
+
+    OsService osService;
+
+    public ExtraPlugin(Settings settings) {
+        // TODO: This collects way more info than we care about
+        osService = new OsService(settings);
+    }
+
     /**
      * Register our parsers.
      */
@@ -40,7 +52,8 @@ public class ExtraPlugin extends Plugin implements SearchPlugin, AnalysisPlugin,
         return Arrays.asList(
                 new QuerySpec<>(SourceRegexQueryBuilder.NAME, SourceRegexQueryBuilder::new, SourceRegexQueryBuilder::fromXContent),
                 new QuerySpec<>(FuzzyLikeThisQueryBuilder.NAME, FuzzyLikeThisQueryBuilder::new, FuzzyLikeThisQueryBuilder::fromXContent),
-                new QuerySpec<>(TokenCountRouterQueryBuilder.NAME, TokenCountRouterQueryBuilder::new, TokenCountRouterQueryBuilder::fromXContent)
+                new QuerySpec<>(TokenCountRouterQueryBuilder.NAME, TokenCountRouterQueryBuilder::new, TokenCountRouterQueryBuilder::fromXContent),
+                new QuerySpec<>(DegradedRouterQueryBuilder.NAME, (in) -> new DegradedRouterQueryBuilder(in, osService), (pc) -> DegradedRouterQueryBuilder.fromXContent(pc, osService))
         );
     }
 
@@ -73,5 +86,10 @@ public class ExtraPlugin extends Plugin implements SearchPlugin, AnalysisPlugin,
                     LevenshteinDistanceScoreBuilder::fromXContent
             )
         );
+    }
+
+    @Override
+    public void onIndexModule(IndexModule indexModule) {
+        // TODO: Add a SearchOperationListener to track a rolling p95 and p99
     }
 }

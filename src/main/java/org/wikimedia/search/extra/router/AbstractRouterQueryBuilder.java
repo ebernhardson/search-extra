@@ -1,5 +1,6 @@
-package org.wikimedia.search.extra.tokencount;
+package org.wikimedia.search.extra.router;
 
+import com.google.common.annotations.VisibleForTesting;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.io.stream.Writeable;
 import org.elasticsearch.common.xcontent.*;
 import org.elasticsearch.index.query.*;
-import org.wikimedia.search.extra.tokencount.AbstractRouterQueryBuilder.Condition;
+import org.wikimedia.search.extra.router.AbstractRouterQueryBuilder.Condition;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @Getter
 @Setter
@@ -30,7 +32,7 @@ abstract public class AbstractRouterQueryBuilder<C extends Condition, QB extends
     static final ParseField CONDITIONS = new ParseField("conditions");
     static final ParseField QUERY = new ParseField("query");
 
-    @Getter(AccessLevel.PROTECTED)
+    @Getter(AccessLevel.PRIVATE)
     private List<C> conditions;
 
     private QueryBuilder fallback;
@@ -73,6 +75,16 @@ abstract public class AbstractRouterQueryBuilder<C extends Condition, QB extends
         AbstractRouterQueryBuilder<C, QB> qb = other;
         return Objects.equals(fallback, qb.fallback) &&
                 Objects.equals(conditions, qb.conditions);
+    }
+
+    @VisibleForTesting
+    Stream<C> conditionStream() {
+        return conditions.stream();
+    }
+
+    @VisibleForTesting
+    protected void condition(C condition) {
+        conditions.add(condition);
     }
 
     @Override
@@ -130,11 +142,12 @@ abstract public class AbstractRouterQueryBuilder<C extends Condition, QB extends
             throw new ParsingException(parser.getTokenLocation(), iae.getMessage());
         }
 
-        if (builder.conditions().isEmpty()) {
+        final AbstractRouterQueryBuilder<?, QB> qb = builder;
+        if (qb.conditions.isEmpty()) {
             throw new ParsingException(parser.getTokenLocation(), "No conditions defined");
         }
 
-        if (builder.fallback() == null) {
+        if (qb.fallback == null) {
             throw new ParsingException(parser.getTokenLocation(), "No fallback query defined");
         }
 

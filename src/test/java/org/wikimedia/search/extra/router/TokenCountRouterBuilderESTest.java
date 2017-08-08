@@ -192,7 +192,7 @@ public class TokenCountRouterBuilderESTest extends AbstractQueryTestCase<TokenCo
         assertThat(t.getMessage(), equalTo("Cannot set extra predicate [gt] on condition: [gte] already set"));
     }
 
-        @Override
+    @Override
     public void testMustRewrite() throws IOException {
         TokenCountRouterQueryBuilder builder = new TokenCountRouterQueryBuilder();
         builder.text(randomAlphaOfLength(20));

@@ -23,7 +23,6 @@ import org.wikimedia.search.extra.router.AbstractRouterQueryBuilder.Condition;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * Builds a token_count_router query
@@ -159,11 +158,6 @@ public class TokenCountRouterQueryBuilder extends AbstractRouterQueryBuilder<Con
         }
     }
 
-    @VisibleForTesting
-    Stream<Condition> conditionStream() {
-        return conditions().stream();
-    }
-
     @Override
     protected boolean doEquals(TokenCountRouterQueryBuilder other) {
         return super.doEquals(other) &&
@@ -181,7 +175,7 @@ public class TokenCountRouterQueryBuilder extends AbstractRouterQueryBuilder<Con
 
     @VisibleForTesting
     public TokenCountRouterQueryBuilder condition(ConditionDefinition def, int value, QueryBuilder qb) {
-        conditions().add(new Condition(def, value, qb));
+        condition(new Condition(def, value, qb));
         return this;
     }
 }

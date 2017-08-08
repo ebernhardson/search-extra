@@ -86,6 +86,6 @@ public class TokenCountRouterQueryIntegrationTest extends AbstractPluginIntegrat
         builder.discountOverlaps(true);
         builder.text("one and two");
         sr = client().prepareSearch("test").setQuery(builder).get();
-        assertSearchHits(sr, "1");
+        assertSearchHits(sr, "2");
     }
 }
