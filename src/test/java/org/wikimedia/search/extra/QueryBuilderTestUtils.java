@@ -10,6 +10,7 @@ import org.elasticsearch.plugins.SearchPlugin.QuerySpec;
 import org.elasticsearch.search.SearchModule;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +25,7 @@ public class QueryBuilderTestUtils {
     private final NamedXContentRegistry xContentRegistry;
 
     private QueryBuilderTestUtils() {
-        SearchModule module = new SearchModule(Settings.EMPTY, false, Collections.singletonList(new ExtraPlugin()));
+        SearchModule module = new SearchModule(Settings.EMPTY, false, Collections.singletonList(new ExtraPlugin(Settings.EMPTY)));
         xContentRegistry = new NamedXContentRegistry(module.getNamedXContents());
     }
 
